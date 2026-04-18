@@ -10,6 +10,7 @@ datasource db {
 model Article {
   id        Int      @id @default(autoincrement())
   title     String
-  content   Json
+  content   Json     // Ubah menjadi Json
+  fileUrl   String?
   createdAt DateTime @default(now())
 }
