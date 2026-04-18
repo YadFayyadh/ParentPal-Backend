@@ -6,7 +6,7 @@ export const uploadDocx = async (req, res, next) => {
     const article = await articleService.processArticleUpload(req.body);
     res.status(201).json(article);
   } catch (err) {
-    next(err); // Lempar error ke error handler bawaan Express
+    res.status(500).json({ error: err.message });
   }
 };
 // ... (fetchArticles controller tetap sama)

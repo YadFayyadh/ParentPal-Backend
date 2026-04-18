@@ -113,7 +113,7 @@ export const processArticleUpload = async (data) => {
     createdAt: admin.firestore.FieldValue.serverTimestamp() 
   };
 
-  const docRef = await db.collection("article").add(articleData);
+  const docRef = await db.collection("articles").add(articleData);
 
   return {
     id: docRef.id,
