@@ -10,9 +10,8 @@ import fs from "fs";
 // ==========================================
 // 1. INISIALISASI FIREBASE ADMIN & SUPABASE
 // ==========================================
-const serviceAccount = JSON.parse(
-  fs.readFileSync(new URL("../../firebase-adminsdk.json", import.meta.url))
-);
+// Langsung ambil dari variabel lingkungan di Railway
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
 if (!admin.apps.length) {
   admin.initializeApp({
