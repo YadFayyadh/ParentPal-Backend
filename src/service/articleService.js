@@ -1,7 +1,5 @@
-if (process.env.NODE_ENV !== 'production') {
-    // Hanya dijalankan saat di lokal laptop, Railway akan mengabaikan ini
-    import('dotenv/config'); 
-}
+import dotenv from "dotenv";
+dotenv.config();
 
 import mammoth from "mammoth";
 import * as cheerio from "cheerio";
