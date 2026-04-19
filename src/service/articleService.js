@@ -33,7 +33,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // ==========================================
 // Menerima parameter `data` yang berasal dari hasil validasi Zod (req.body)
 export const processArticleUpload = async (data) => {
-  const { title, date, file, thumbnail } = data;
+  const { title, date, file, thumbnail, category, child } = data;
 
   // Pastikan nama file unik dengan menghilangkan spasi
   const safeDocName = `doc_${Date.now()}_${file.originalname.replace(/\s+/g, "_")}`;
@@ -115,9 +115,11 @@ export const processArticleUpload = async (data) => {
     thumbnailUrl: thumbnailUrl,
     fileUrl: fileUrl,
     content: blocks,
+    category: category,
+    child: child,
     // Waktu asli saat data ini masuk ke database server
     createdAt: admin.firestore.FieldValue.serverTimestamp() 
-  };
+  };  
 
   const docRef = await db.collection("articles").add(articleData);
 
