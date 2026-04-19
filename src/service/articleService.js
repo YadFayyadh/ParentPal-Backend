@@ -1,5 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+    // Hanya dijalankan saat di lokal laptop, Railway akan mengabaikan ini
+    import('dotenv/config'); 
+}
 
 import mammoth from "mammoth";
 import * as cheerio from "cheerio";
@@ -11,6 +13,7 @@ import fs from "fs";
 // 1. INISIALISASI FIREBASE ADMIN & SUPABASE
 // ==========================================
 // Langsung ambil dari variabel lingkungan di Railway
+
 const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
 if (!admin.apps.length) {
