@@ -1,5 +1,9 @@
 import express from "express"
-import dotenv from "dotenv"
+if (process.env.NODE_ENV !== 'production') {
+    // Hanya dijalankan saat di lokal laptop, Railway akan mengabaikan ini
+    import('dotenv/config'); 
+}
+
 import articleRoutes from "./routes/articleRoutes.js"
 import prisma from "./prisma/index.js"
 
