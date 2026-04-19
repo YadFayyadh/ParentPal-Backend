@@ -6,9 +6,9 @@ const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingm
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export const articleUploadSchema = z.object({
-  title: z.string().min(5, "Judul minimal 5 karakter"),
-  category: z.string().min(10, "Kategori minimal 10 karakter"),
-  child: z.string().min(10, "Nama anak minimal 10 karakter"),
+  title: z.string().max(20, "Judul maximal 5 karakter"),
+  category: z.string().max(15, "Kategori maximal 10 karakter"),
+  child: z.string().max(10, "Nama anak maximal 10 karakter"),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Format tanggal tidak valid",
   }),
