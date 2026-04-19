@@ -11,33 +11,14 @@ import fs from "fs";
 // 1. INISIALISASI FIREBASE ADMIN & SUPABASE
 // ==========================================
 // Langsung ambil dari variabel lingkungan di Railway
-// Coba tangkap isinya dulu dalam bentuk teks biasa
-const rawFirebaseText = process.env.FIREBASE_CREDENTIALS;
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
-// CCTV Paling Aman:
-console.log("=== CEK VARIABEL RAILWAY ===");
-console.log("Daftar Variabel:", Object.keys(process.env).join(", "));
-console.log("Isi Firebase:", rawFirebaseText ? "ADA ISINYA!" : "KOSONG/UNDEFINED!");
-console.log("============================");
-
-// Jangan langsung di-parse kalau kosong, biar gak crash!
-if (rawFirebaseText) {
-    try {
-        const serviceAccount = JSON.parse(rawFirebaseText);
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-            });
-            console.log("🔥 Firebase Berhasil Jalan!");
-        }
-    } catch (error) {
-        console.error("Gagal parse JSON Firebase:", error.message);
-    }
-} else {
-    console.error("🚨 ALARM: FIREBASE_CREDENTIALS benar-benar tidak ditemukan oleh Railway!");
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
 }
-
-const db = admin.apps.length ? admin.firestore() : null;
+const db = admin.firestore();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // ==========================================
