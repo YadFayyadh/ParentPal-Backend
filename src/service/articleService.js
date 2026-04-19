@@ -6,20 +6,26 @@ import * as cheerio from "cheerio";
 import { createClient } from "@supabase/supabase-js";
 import admin from "firebase-admin";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// ==========================================
-// 1. INISIALISASI FIREBASE ADMIN & SUPABASE
-// ==========================================
-// Langsung ambil dari variabel lingkungan di Railway
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+// Sesuaikan path ke file JSON kamu
+const serviceAccount = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "../../firebase-adminsdk.json"), "utf8")
+);
+
 
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
 }
+
 const db = admin.firestore();
+
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // ==========================================
