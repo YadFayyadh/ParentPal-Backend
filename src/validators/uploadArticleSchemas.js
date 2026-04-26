@@ -8,8 +8,8 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const articleUploadSchema = z.object({
   title: z.string().max(20, "Judul maximal 5 karakter"),
   author: z.string().max(20, "Penulis maximal 5 karakter"),
-  category: z.string().max(15, "Kategori maximal 10 karakter"),
-  child: z.string().max(10, "Nama anak maximal 10 karakter"),
+  category: z.string().max(30, "Kategori maximal 10 karakter"),
+  child: z.string().max(30, "Nama anak maximal 10 karakter"),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Format tanggal tidak valid",
   }),
