@@ -3,7 +3,6 @@ dotenv.config();
 
 import mammoth from "mammoth";
 import * as cheerio from "cheerio";
-import { createClient } from "@supabase/supabase-js";
 import admin from "firebase-admin";
 import fs from "fs";
 import path from "path";
@@ -12,140 +11,171 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Sesuaikan path ke file JSON kamu
+// ==========================================
+// FIREBASE CONFIG
+// ==========================================
 const serviceAccount = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "../../firebase-adminsdk.json"), "utf8")
+  fs.readFileSync(
+    path.join(__dirname, "../../firebase-adminsdk.json"),
+    "utf8"
+  )
 );
-
 
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
   });
 }
 
 const db = admin.firestore();
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const bucket = admin.storage().bucket();
 
 // ==========================================
-// 2. FUNGSI UPLOAD & EKSTRAK
+// PROCESS ARTICLE UPLOAD
 // ==========================================
-// Menerima parameter `data` yang berasal dari hasil validasi Zod (req.body)
 export const processArticleUpload = async (data) => {
-  const { title, author, date, file, thumbnail, category, child } = data;
-
-  // Pastikan nama file unik dengan menghilangkan spasi
-  const safeDocName = `doc_${Date.now()}_${file.originalname.replace(/\s+/g, "_")}`;
-  const safeThumbName = `thumb_${Date.now()}_${thumbnail.originalname.replace(/\s+/g, "_")}`;
-
-  // ==========================================
-  // A. UPLOAD THUMBNAIL KE SUPABASE
-  // ==========================================
-  const { error: thumbUploadError } = await supabase.storage
-    .from("parentpal-docs")
-    .upload(`thumbnails/${safeThumbName}`, thumbnail.buffer, { contentType: thumbnail.mimetype });
-
-  if (thumbUploadError) throw new Error(`Thumbnail Upload Error: ${thumbUploadError.message}`);
-
-  const thumbnailUrl = supabase.storage
-    .from("parentpal-docs")
-    .getPublicUrl(`thumbnails/${safeThumbName}`).data.publicUrl;
+  const {
+    title,
+    author,
+    date,
+    file,
+    thumbnail,
+    category,
+    child,
+  } = data;
 
   // ==========================================
-  // B. UPLOAD DOKUMEN DOCX KE SUPABASE
+  // THUMBNAIL NAME
   // ==========================================
-  const { error: docUploadError } = await supabase.storage
-    .from("parentpal-docs")
-    .upload(`documents/${safeDocName}`, file.buffer, { contentType: file.mimetype });
-
-  if (docUploadError) throw new Error(`Document Upload Error: ${docUploadError.message}`);
-
-  const fileUrl = supabase.storage
-    .from("parentpal-docs")
-    .getPublicUrl(`documents/${safeDocName}`).data.publicUrl;
+  const safeThumbName = `thumb_${Date.now()}_${thumbnail.originalname.replace(
+    /\s+/g,
+    "_"
+  )}`;
 
   // ==========================================
-  // C. MAMMOTH: EKSTRAK DOCX & UPLOAD GAMBAR INLINE
+  // A. UPLOAD THUMBNAIL KE FIREBASE STORAGE
+  // ==========================================
+  const thumbnailFile = bucket.file(`thumbnails/${safeThumbName}`);
+
+  await thumbnailFile.save(thumbnail.buffer, {
+    metadata: {
+      contentType: thumbnail.mimetype,
+    },
+    public: true,
+  });
+
+  const thumbnailUrl = `https://storage.googleapis.com/${bucket.name}/thumbnails/${safeThumbName}`;
+
+  // ==========================================
+  // B. EKSTRAK DOCX & UPLOAD GAMBAR INLINE
   // ==========================================
   const options = {
     convertImage: mammoth.images.inline(async (element) => {
       const imageBuffer = await element.read();
-      const imageName = `img_${Date.now()}_${Math.floor(Math.random() * 1000)}.${element.contentType.split("/")[1]}`;
-      
-      await supabase.storage
-        .from("parentpal-docs")
-        .upload(`images/${imageName}`, imageBuffer, { contentType: element.contentType });
-      
-      const imgUrl = supabase.storage
-        .from("parentpal-docs")
-        .getPublicUrl(`images/${imageName}`).data.publicUrl;
 
-      return { src: imgUrl };
-    })
+      const extension = element.contentType.split("/")[1];
+
+      const imageName = `img_${Date.now()}_${Math.floor(
+        Math.random() * 1000
+      )}.${extension}`;
+
+      // Upload gambar ke Firebase Storage
+      const imageFile = bucket.file(`images/${imageName}`);
+
+      await imageFile.save(imageBuffer, {
+        metadata: {
+          contentType: element.contentType,
+        },
+        public: true,
+      });
+
+      const imageUrl = `https://storage.googleapis.com/${bucket.name}/images/${imageName}`;
+
+      return {
+        src: imageUrl,
+      };
+    }),
   };
 
-  const htmlResult = await mammoth.convertToHtml({ buffer: file.buffer }, options);
-  
+  // DOCX cuma dipakai untuk ekstrak
+  const htmlResult = await mammoth.convertToHtml(
+    { buffer: file.buffer },
+    options
+  );
+
   // ==========================================
-  // D. CHEERIO: UBAH HTML MENJADI JSON BLOCKS
+  // C. HTML -> JSON BLOCKS
   // ==========================================
   const $ = cheerio.load(htmlResult.value);
+
   const blocks = [];
 
-  $('body').contents().each((index, element) => {
-    // Cek apakah ada gambar di dalam paragraf
-    const img = $(element).find('img');
-    if (img.length > 0) {
-        blocks.push({ type: "image", url: img.attr('src') });
-    }
-    // Cek teks
-    const text = $(element).text().trim();
-    if (text) {
-        blocks.push({ type: "text", content: text });
-    }
-  });
+  $("body")
+    .contents()
+    .each((index, element) => {
+      // Ambil gambar
+      const img = $(element).find("img");
+
+      if (img.length > 0) {
+        blocks.push({
+          type: "image",
+          url: img.attr("src"),
+        });
+      }
+
+      // Ambil text
+      const text = $(element).text().trim();
+
+      if (text) {
+        blocks.push({
+          type: "text",
+          content: text,
+        });
+      }
+    });
 
   // ==========================================
-  // E. SIMPAN KE FIRESTORE
+  // D. SIMPAN KE FIRESTORE
   // ==========================================
   const articleData = {
-    title: title,
-    author: author,
-    date: date, // Tanggal yang dikirim oleh psikolog/admin
-    thumbnailUrl: thumbnailUrl,
-    fileUrl: fileUrl,
+    title,
+    author,
+    date,
+    thumbnailUrl,
     content: blocks,
-    category: category,
-    child: child,
-    // Waktu asli saat data ini masuk ke database server
-    createdAt: admin.firestore.FieldValue.serverTimestamp() 
-  };  
+    category,
+    child,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
 
   const docRef = await db.collection("articles").add(articleData);
 
   return {
     id: docRef.id,
     ...articleData,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 };
 
-// ==========================================
-// 3. FUNGSI AMBIL SEMUA ARTIKEL
-// ==========================================
+
 export const getAllArticles = async () => {
-  // Mengurutkan berdasarkan tanggal buat secara descending (terbaru di atas)
-  const snapshot = await db.collection("article").orderBy("createdAt", "desc").get();
-  
+  const snapshot = await db
+    .collection("articles")
+    .orderBy("createdAt", "desc")
+    .get();
+
   const articles = [];
+
   snapshot.forEach((doc) => {
     const data = doc.data();
+
     articles.push({
       id: doc.id,
       ...data,
-      // Ubah tipe Timestamp bawaan Firebase menjadi format ISO String
-      createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null 
+      createdAt: data.createdAt
+        ? data.createdAt.toDate().toISOString()
+        : null,
     });
   });
 
