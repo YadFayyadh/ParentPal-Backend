@@ -29,8 +29,9 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-const bucket = admin.storage().bucket();
-
+const bucket = admin.storage().bucket(
+  process.env.FIREBASE_STORAGE_BUCKET
+);
 // ==========================================
 // PROCESS ARTICLE UPLOAD
 // ==========================================
