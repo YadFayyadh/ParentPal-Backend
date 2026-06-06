@@ -4,13 +4,11 @@ const MAX_DOC_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_IMG_SIZE = 2 * 1024 * 1024; // 2MB
 const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const AuthorSchema = z.object({
-  id: z.string().max(36, "ID maksimal 36 karakter"), // bisa UUID
-  nama: z.string().max(20, "Penulis maksimal 20 karakter")
-});
+
 export const articleUploadSchema = z.object({
   title: z.string().max(20, "Judul maximal 5 karakter"),
-  author: AuthorSchema,
+  authorId: z.string().max(36, "ID penulis maksimal 36 karakter"),
+  authorNama: z.string().max(50, "Nama penulis maksimal 50 karakter"),
   category: z.string().max(30, "Kategori maximal 30 karakter"),
   child: z.string().max(30, "Nama anak maximal 10 karakter"),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {

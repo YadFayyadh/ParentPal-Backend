@@ -412,11 +412,19 @@ const wrapTablesWithScrollDiv = (html) => {
 // PROCESS ARTICLE UPLOAD
 // ==========================================
 export const processArticleUpload = async (data) => {
-  const { title, author, date, file, thumbnail, category, child } = data;
+  const { title, authorId, authorNama, date, file, thumbnail, category, child } = data;
 
-  // ==========================================
-  // A. UPLOAD THUMBNAIL KE FIREBASE STORAGE
-  // ==========================================
+  let parsedAuthor = {};
+  if (typeof author === "string") {
+    try {
+      parsedAuthor = JSON.parse(author);
+    } catch (e) {
+      console.warn("Author bukan JSON valid, menggunakan fallback.");
+    }
+  } else if (typeof author === "object") {
+    parsedAuthor = author;
+  }
+
   const safeThumbName = `thumb_${Date.now()}_${thumbnail.originalname.replace(
     /\s+/g,
     "_",
@@ -546,8 +554,8 @@ export const processArticleUpload = async (data) => {
   const articleData = {
     title,
     author: {
-      id: author.id,
-      nama: author.nama
+      id: authorId || "",
+      nama: authorId || ""
     },
     date,
     thumbnailUrl,
