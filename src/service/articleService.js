@@ -545,7 +545,10 @@ export const processArticleUpload = async (data) => {
   // ==========================================
   const articleData = {
     title,
-    author,
+    author: {
+      id: author.id,
+      nama: author.nama
+    },
     date,
     thumbnailUrl,
     htmlUrl,
