@@ -6,11 +6,11 @@ const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingm
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export const articleUploadSchema = z.object({
-  title: z.string().max(20, "Judul maximal 5 karakter"),
-  authorId: z.string().max(36, "ID penulis maksimal 36 karakter"),
+  title: z.string().max(50, "Judul maximal 50 karakter"),
+  authorId: z.string().max(60, "ID penulis maksimal 60 karakter"),
   authorNama: z.string().max(50, "Nama penulis maksimal 50 karakter"),
   category: z.string().max(30, "Kategori maximal 30 karakter"),
-  child: z.string().max(30, "Nama anak maximal 10 karakter"),
+  child: z.string().max(30, "Nama anak maximal 30 karakter"),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Format tanggal tidak valid",
   }),
