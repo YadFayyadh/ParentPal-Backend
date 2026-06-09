@@ -14,11 +14,11 @@ export const articleUploadSchema = z.object({
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Format tanggal tidak valid",
   }),
-  // Validasi File DOCX
+ 
   file: z.any()
     .refine((file) => file, "File dokumen wajib diunggah")
     .refine((file) => file?.mimetype === DOCX_TYPE, "Format harus .docx")
     .refine((file) => file?.size <= MAX_DOC_SIZE, "Dokumen maksimal 5MB"),
-  // Validasi Foto Thumbnail
+  
   thumbnail: z.any().optional()
 });
