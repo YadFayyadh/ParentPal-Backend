@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const MAX_DOC_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_IMG_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_IMG_SIZE = 5 * 1024 * 1024; // 2MB
 const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -23,5 +23,5 @@ export const articleUploadSchema = z.object({
   thumbnail: z.any()
     .refine((file) => file, "Foto thumbnail wajib diunggah")
     .refine((file) => IMAGE_TYPES.includes(file?.mimetype), "Format foto harus JPG/PNG/WebP")
-    .refine((file) => file?.size <= MAX_IMG_SIZE, "Foto maksimal 2MB"),
+    .refine((file) => file?.size <= MAX_IMG_SIZE, "Foto maksimal 5MB"),
 });
