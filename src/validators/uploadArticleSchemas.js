@@ -20,8 +20,5 @@ export const articleUploadSchema = z.object({
     .refine((file) => file?.mimetype === DOCX_TYPE, "Format harus .docx")
     .refine((file) => file?.size <= MAX_DOC_SIZE, "Dokumen maksimal 5MB"),
   // Validasi Foto Thumbnail
-  thumbnail: z.any()
-    .refine((file) => file, "Foto thumbnail wajib diunggah")
-    .refine((file) => IMAGE_TYPES.includes(file?.mimetype), "Format foto harus JPG/PNG/WebP")
-    .refine((file) => file?.size <= MAX_IMG_SIZE, "Foto maksimal 5MB"),
+  thumbnail: z.any().optional()
 });
